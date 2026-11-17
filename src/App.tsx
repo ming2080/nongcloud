@@ -14,6 +14,7 @@ import {
   PieChart, Pie, Cell, AreaChart, Area, BarChart, Bar, ReferenceLine 
 } from 'recharts';
 import { DeviceTypeManagement } from './components/DeviceTypeManagement';
+import { buildHistoryConfig } from './data/historySeries';
 
 const initialOfflineDevices = [
   { id: '1', name: '浙江安吉白茶核心园区智能墒情桩', serial: 'ZJ-AJ-SEN-01', time: '2026-10-15 14:12:11', type: '传感器', battery: '12%' },
@@ -292,89 +293,8 @@ const ManagementBigScreen: React.FC<{
   const [prodStatPeriod, setProdStatPeriod] = useState<'today' | 'week' | 'month'>('today');
   const [historyChartStyle, setHistoryChartStyle] = useState<'pillar' | 'step' | 'matrix'>('pillar');
 
-  // Dynamic Historical Data Points responsive to historyMetric and historyDateRange
-  const getHistoryConfig = () => {
-    if (historyMetric === '空气湿度') {
-      return {
-        unit: '%RH',
-        domain: [30, 100],
-        ticks: [30, 50, 70, 90],
-        alertLine: 80,
-        baseline: 60,
-        peak: '86 %RH',
-        peakTime: '10/15 08:00',
-        valley: '49 %RH',
-        valleyTime: '10/06 15:30',
-        avg: '65.5 %RH',
-        stability: '94.2%',
-        data: [
-          { date: '10/06', val: 49, note: '干燥警戒' },
-          { date: '10/07', val: 54, note: '偏干' },
-          { date: '10/08', val: 58, note: '良好' },
-          { date: '10/09', val: 62, note: '正常' },
-          { date: '10/10', val: 63, note: '适宜' },
-          { date: '10/11', val: 65, note: '常态' },
-          { date: '10/12', val: 68, note: '适中' },
-          { date: '10/13', val: 71, note: '正常' },
-          { date: '10/14', val: 79, note: '湿润' },
-          { date: '10/15', val: 86, note: '高湿预警' },
-        ]
-      };
-    }
-    if (historyMetric === '土壤水势') {
-      return {
-        unit: 'kPa',
-        domain: [10, 60],
-        ticks: [10, 25, 40, 55],
-        alertLine: 45,
-        baseline: 25,
-        peak: '51 kPa',
-        peakTime: '10/15 16:20',
-        valley: '19 kPa',
-        valleyTime: '10/06 08:15',
-        avg: '31.2 kPa',
-        stability: '91.8%',
-        data: [
-          { date: '10/06', val: 19, note: '极湿' },
-          { date: '10/07', val: 22, note: '适宜' },
-          { date: '10/08', val: 24, note: '墒情优' },
-          { date: '10/09', val: 26, note: '良好' },
-          { date: '10/10', val: 28, note: '良好' },
-          { date: '10/11', val: 31, note: '微降' },
-          { date: '10/12', val: 35, note: '补灌后' },
-          { date: '10/13', val: 41, note: '临界' },
-          { date: '10/14', val: 46, note: '缺水预警' },
-          { date: '10/15', val: 51, note: '重度缺水' },
-        ]
-      };
-    }
-    // Default: 空气温度
-    return {
-      unit: '℃',
-      domain: [0, 60],
-      ticks: [0, 20, 40, 60],
-      alertLine: 45,
-      baseline: 28,
-      peak: '52 ℃',
-      peakTime: '10/15 14:10',
-      valley: '25 ℃',
-      valleyTime: '10/06 05:40',
-      avg: '36.5 ℃',
-      stability: '93.6%',
-      data: [
-        { date: '10/06', val: 25, note: '偏凉' },
-        { date: '10/07', val: 28, note: '温和' },
-        { date: '10/08', val: 29, note: '常态' },
-        { date: '10/09', val: 32, note: '常态' },
-        { date: '10/10', val: 34, note: '适宜' },
-        { date: '10/11', val: 35, note: '升温' },
-        { date: '10/12', val: 38, note: '回稳' },
-        { date: '10/13', val: 44, note: '偏高' },
-        { date: '10/14', val: 48, note: '超限高温' },
-        { date: '10/15', val: 52, note: '极值警戒' },
-      ]
-    };
-  };
+  // 历史曲线数据由数据驱动：按指标取数、按所选日期区间过滤，峰值/谷值/均值由过滤后的数据算出
+  const getHistoryConfig = () => buildHistoryConfig(historyMetric, historyDateRange);
 
   useEffect(() => {
     const update = () => {
@@ -2148,6 +2068,19 @@ const ManagementBigScreen: React.FC<{
                         )}
                       </ResponsiveContainer>
                     </div>
+
+                    {/* 区间统计：峰值 / 谷值 / 均值均由当前区间数据算出 */}
+                    {cfg.summary ? (
+                      <div className="shrink-0 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-cyan-500/20 pt-2 text-[11px]">
+                        <span className="text-slate-400">区间统计</span>
+                        <span className="text-cyan-200">峰值 <b className="text-amber-300">{cfg.summary.peakVal} {cfg.unit}</b>（{cfg.summary.peakDate}）</span>
+                        <span className="text-cyan-200">谷值 <b className="text-cyan-300">{cfg.summary.valleyVal} {cfg.unit}</b>（{cfg.summary.valleyDate}）</span>
+                        <span className="text-cyan-200">均值 <b className="text-cyan-200">{cfg.summary.avg} {cfg.unit}</b></span>
+                        <span className="text-slate-400">共 {cfg.summary.count} 天</span>
+                      </div>
+                    ) : (
+                      <div className="shrink-0 mt-1 border-t border-cyan-500/20 pt-2 text-[11px] text-amber-300">该时间段内无历史数据，请调整日期区间。</div>
+                    )}
                   </>
                 );
               })()}
