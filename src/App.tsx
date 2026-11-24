@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { DeviceTypeManagement } from './components/DeviceTypeManagement';
 import { buildHistoryConfig } from './data/historySeries';
+import { TERMINAL_DEVICES, summarizeTerminalDevices } from './data/terminalDevices';
 
 const initialOfflineDevices = [
   { id: '1', name: '浙江安吉白茶核心园区智能墒情桩', serial: 'ZJ-AJ-SEN-01', time: '2026-10-15 14:12:11', type: '传感器', battery: '12%' },
@@ -295,6 +296,9 @@ const ManagementBigScreen: React.FC<{
 
   // 历史曲线数据由数据驱动：按指标取数、按所选日期区间过滤，峰值/谷值/均值由过滤后的数据算出
   const getHistoryConfig = () => buildHistoryConfig(historyMetric, historyDateRange);
+
+  // 终端设备态势由数据驱动：顶部在线/异常数与筛选标签计数由设备清单算出
+  const terminalStats = summarizeTerminalDevices(TERMINAL_DEVICES);
 
   useEffect(() => {
     const update = () => {
@@ -975,12 +979,12 @@ const ManagementBigScreen: React.FC<{
                 <div className="flex items-center gap-2 text-[10px] font-mono">
                   <span className="text-emerald-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                    在线: 6
+                    在线: {terminalStats.online}
                   </span>
                   <span className="text-slate-600">|</span>
                   <span className="text-rose-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                    异常: 1
+                    异常: {terminalStats.alert}
                   </span>
                 </div>
               </div>
@@ -988,10 +992,10 @@ const ManagementBigScreen: React.FC<{
               {/* Quick Station Filter Segmented Tabs */}
               <div className="grid grid-cols-4 gap-1 mb-2 shrink-0">
                 {[
-                  { key: 'all', label: '全部', count: 7 },
-                  { key: 'station1', label: '基站1#', count: 4 },
-                  { key: 'station2', label: '基站2#', count: 3 },
-                  { key: 'alert', label: '告警', count: 1 },
+                  { key: 'all', label: '全部', count: terminalStats.total },
+                  { key: 'station1', label: '基站1#', count: terminalStats.station1 },
+                  { key: 'station2', label: '基站2#', count: terminalStats.station2 },
+                  { key: 'alert', label: '告警', count: terminalStats.alert },
                 ].map((tab) => (
                   <button
                     key={tab.key}
@@ -1024,92 +1028,7 @@ const ManagementBigScreen: React.FC<{
 
               {/* High-Tech Terminal Device Telemetry Cards List */}
               <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 select-none font-sans">
-                {[
-                  { 
-                    id: 'VALVE-01', 
-                    name: '灌溉控制器1#电磁阀门', 
-                    station: 'station1',
-                    stationTag: '基站1#',
-                    type: 'valve', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '阀门开度 100% · 恒压供水', 
-                    signal: '98%',
-                    time: '16:23:45' 
-                  },
-                  { 
-                    id: 'VALVE-02', 
-                    name: '灌溉控制器2#电磁阀门', 
-                    station: 'station1',
-                    stationTag: '基站1#',
-                    type: 'valve', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '阀门闭合 0% · 待机轮灌', 
-                    signal: '95%',
-                    time: '16:22:10' 
-                  },
-                  { 
-                    id: 'VALVE-03', 
-                    name: '灌溉控制器3#电磁阀门', 
-                    station: 'station1',
-                    stationTag: '基站1#',
-                    type: 'valve', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '轮灌分组 A-01 · 延时待启', 
-                    signal: '92%',
-                    time: '16:20:00' 
-                  },
-                  { 
-                    id: 'SEN-04', 
-                    name: '田间通用土壤墒情传感器', 
-                    station: 'station1',
-                    stationTag: '基站1#',
-                    type: 'sensor', 
-                    status: '异常', 
-                    isAlert: true,
-                    telemetry: '采集超时 >150ms · 数据突变', 
-                    signal: '42%',
-                    time: '16:12:05' 
-                  },
-                  { 
-                    id: 'MET-01', 
-                    name: '小型农田环境气象站', 
-                    station: 'station2',
-                    stationTag: '基站2#',
-                    type: 'weather', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '光照 86k Lux · 温湿监测正常', 
-                    signal: '99%',
-                    time: '16:23:40' 
-                  },
-                  { 
-                    id: 'PUMP-02', 
-                    name: '水肥机组变频增压泵', 
-                    station: 'station2',
-                    stationTag: '基站2#',
-                    type: 'pump', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '频率 42.5Hz · 稳压 0.38MPa', 
-                    signal: '94%',
-                    time: '16:23:12' 
-                  },
-                  { 
-                    id: 'FLOW-03', 
-                    name: '主干管道脉冲流量计', 
-                    station: 'station2',
-                    stationTag: '基站2#',
-                    type: 'flow', 
-                    status: '正常', 
-                    isAlert: false,
-                    telemetry: '瞬时流量 24.6 m³/h', 
-                    signal: '96%',
-                    time: '16:21:45' 
-                  },
-                ]
+                {TERMINAL_DEVICES
                   .filter((item) => {
                     if (deviceFilter === 'station1' && item.station !== 'station1') return false;
                     if (deviceFilter === 'station2' && item.station !== 'station2') return false;
