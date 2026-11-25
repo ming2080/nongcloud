@@ -68,3 +68,37 @@ export interface TerminalDeviceStats {
   /** 基站2# 设备数 */
   station2: number;
 }
+
+/** 离线 / 低电量预警相关类型：管理端「离线设备监控预警」「低电量设备警示」两块面板使用 */
+
+export interface OfflineDevice {
+  id: string;
+  name: string;
+  serial: string;
+  /** 离线时间，如 2026-10-15 14:12:11 */
+  time: string;
+  type: string;
+  /** 离线前最后上报电量，如 12% */
+  battery: string;
+}
+
+export interface LowPowerDevice {
+  id: string;
+  name: string;
+  serial: string;
+  /** 记录时间，如 2026-10-15 15:12:11 */
+  time: string;
+  /** 当前电量，如 5% */
+  battery: string;
+}
+
+export interface DeviceAlertStats {
+  /** 离线设备数 */
+  offlineCount: number;
+  /** 低电量设备数 */
+  lowPowerCount: number;
+  /** 低电量设备中的最低电量，如 4% */
+  lowestBattery: string;
+  /** 最早离线时间，如 2026-10-12 22:40:11 */
+  earliestOfflineTime: string;
+}
