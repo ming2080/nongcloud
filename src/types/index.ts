@@ -102,3 +102,40 @@ export interface DeviceAlertStats {
   /** 最早离线时间，如 2026-10-12 22:40:11 */
   earliestOfflineTime: string;
 }
+
+/** 设备类型相关类型：管理端「设备类型」页使用 */
+
+export interface DeviceTypeItem {
+  id: string;
+  no?: number;
+  name: string;
+  code: string;
+  image?: string;
+  category?: string;
+  version: string;
+  parentType: string;
+  remark: string;
+  creator: string;
+  createTime: string;
+  updater?: string;
+  updateTime?: string;
+  protocol?: string;
+  model?: string;
+  deviceCount?: number;
+  status?: '启用' | '停用';
+  moduleName?: string;
+  sort?: number;
+}
+
+export interface DeviceTypeStats {
+  /** 设备类型总数 */
+  total: number;
+  /** 启用状态的类型数 */
+  enabled: number;
+  /** 各类型关联设备数之和 */
+  totalDeviceCount: number;
+  /** 各分类的类型数，按首次出现顺序 */
+  categories: { name: string; count: number }[];
+  /** 各上级类型的类型数，按首次出现顺序 */
+  parentTypes: { name: string; count: number }[];
+}
